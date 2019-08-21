@@ -323,6 +323,7 @@ class SettingsController extends Controller
         $request = Craft::$app->getRequest();
         $redirect = new Redirect();
         $redirect->id = $request->getBodyParam('redirectId');
+        $redirect->uid = $request->getBodyParam('uid');
         $redirect->sourceUrl = $request->getBodyParam('sourceUrl');
         $redirect->destinationUrl = $request->getBodyParam('destinationUrl');
         $redirect->statusCode = $request->getBodyParam('statusCode');
@@ -351,6 +352,14 @@ class SettingsController extends Controller
 
             return null;
         } else {
+            // remove form other sites
+            Craft::$app->getDb()->createCommand()
+                ->delete('{{%elements_sites}}', [
+                    'AND',
+                    ['elementId' => $redirect->id],
+                    ['!=', 'siteId', $siteId]
+                ])
+                ->execute();
             if ($request->getAcceptsJson()) {
                 return $this->asJson([
                     'success' => true,
